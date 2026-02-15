@@ -1,6 +1,14 @@
 import streamlit as st
 import os
 import yt_dlp
+import sys
+
+# 1. DEFINE the function at the top
+def get_ffmpeg_path():
+    """Locates ffmpeg.exe inside the bundled EXE folder"""
+    if hasattr(sys, '_MEIPASS'):
+        return sys._MEIPASS
+    return os.getcwd()
 
 # --- Configuration ---
 BASE_FOLDER = "data"
@@ -11,6 +19,14 @@ os.makedirs(SONGS_FOLDER, exist_ok=True)
 os.makedirs(VIDEOS_FOLDER, exist_ok=True)
 
 st.set_page_config(page_title="Pro Media Downloader", page_icon="🚀", layout="wide")
+
+# --- TOP EXIT BUTTON ---
+col_title, col_exit_top = st.columns([4, 1])
+with col_exit_top:
+    if st.button("🛑 Stop Server & Exit", use_container_width=True, type="primary", key="top_exit"):
+        st.success("Stopping...")
+        os._exit(0)
+st.divider()
 
 
 # --- Helper Functions ---
@@ -84,7 +100,11 @@ with st.container(border=True):
     col_url, col_type, col_qual = st.columns([2, 1, 1])
 
     with col_url:
-        url = st.text_input("🔗 Paste YouTube Link:", placeholder="Enter URL here...")
+        url = st.text_input(
+            "🔗 Paste YouTube Link:",
+            placeholder="Paste link and press Enter...",
+            help="Press Enter after pasting to verify the video details."
+        )
 
     with col_type:
         download_type = st.selectbox("📦 Format", ["Music (MP3)", "Video (MP4)"])
@@ -115,10 +135,15 @@ with st.container(border=True):
         else:
             progress_bar = st.progress(0)
             status_msg = st.empty()
+
+            # --- GET PORTABLE FFMPEG PATH ---
+            ffmpeg_loc = get_ffmpeg_path()
+
             try:
                 if download_type == "Music (MP3)":
                     opts = {
                         'format': 'bestaudio/best',
+                        'ffmpeg_location': ffmpeg_loc,  # 👈 ADDS FFmpeg PATH
                         'outtmpl': f'{SONGS_FOLDER}/%(title)s.%(ext)s',
                         'noplaylist': True,
                         'progress_hooks': [progress_hook],
@@ -128,6 +153,7 @@ with st.container(border=True):
                 else:
                     opts = {
                         'format': ydl_format,
+                        'ffmpeg_location': ffmpeg_loc,  # 👈 ADDS FFmpeg PATH
                         'outtmpl': f'{VIDEOS_FOLDER}/%(title)s.%(ext)s',
                         'noplaylist': True,
                         'merge_output_format': 'mp4',
@@ -203,3 +229,4 @@ with col_s2:
                 if os.path.isfile(file_path):
                     os.unlink(file_path)
         st.rerun()
+
