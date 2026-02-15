@@ -229,4 +229,3 @@ with col_s2:
                 if os.path.isfile(file_path):
                     os.unlink(file_path)
         st.rerun()
-
