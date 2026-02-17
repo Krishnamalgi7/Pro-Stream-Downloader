@@ -70,6 +70,21 @@ st.markdown("""
         border-radius: 12px !important;
         box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
     }
+    
+    /* FIX FOR TOAST NOTIFICATIONS */
+    div[data-testid="stToast"] {
+        background-color: #1A2347 !important;
+        color: #FFFFFF !important;
+        border: 1px solid rgba(0, 212, 255, 0.3) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
+    }
+    
+    /* Force text inside toast to be white */
+    div[data-testid="stToast"] p, 
+    div[data-testid="stToast"] div {
+        color: #FFFFFF !important;
+    }
 
     /* Input Field Styling */
     .stTextInput > div > div > input {
@@ -636,7 +651,7 @@ def perform_download(url, opts, target_folder):
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
 
-        st.balloons()
+        st.toast("✅ Download Completed Successfully!", icon="🎉")
         st.session_state.download_done = True
         st.session_state.download_error = None
 
