@@ -3,6 +3,8 @@ import streamlit.components.v1 as components
 import os
 import yt_dlp
 import sys
+import threading
+import time
 
 
 # 1. DEFINE the function at the top
@@ -58,6 +60,15 @@ st.markdown("""
 
     .logo-text::before {
         content: "🚀 ";
+    }
+
+    /* FIX FOR POPUP DIALOGS (Make them dark) */
+    div[role="dialog"] {
+        background: #1A2347 !important;
+        color: #FFFFFF !important;
+        border: 1px solid rgba(0, 212, 255, 0.3) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
     }
 
     /* Input Field Styling */
@@ -562,21 +573,109 @@ def format_bytes(size):
         size /= 1024.0
 
 
-# --- Progress Bar Hook ---
-def progress_hook(d):
-    if d['status'] == 'downloading':
-        p = d.get('_percent_str', '0%').replace('%', '')
-        try:
-            percent_val = float(p) / 100
-            speed = d.get('_speed_str', 'N/A')
-            eta = d.get('_eta_str', 'N/A')
-            progress_bar.progress(percent_val)
-            status_msg.info(f"⚡ Downloading: **{p}%** | Speed: **{speed}** | ETA: **{eta}**")
-        except:
-            pass
-    elif d['status'] == 'finished':
-        progress_bar.progress(1.0)
-        status_msg.success("✅ Download complete! Finalizing file...")
+def check_duplicate(title, dl_type):
+    folder = SONGS_FOLDER if dl_type == "Music (MP3)" else VIDEOS_FOLDER
+
+    # Normalize title and remove extension for comparison
+    import re
+    def normalize(t):
+        t = re.sub(r'[^\w\s]', '', t, flags=re.UNICODE)
+        return re.sub(r'\s+', ' ', t).strip().lower()
+
+    normalized_title = normalize(title)
+
+    if not os.path.exists(folder):
+        return None
+
+    for existing in os.listdir(folder):
+        name_no_ext = os.path.splitext(existing)[0]
+        if normalize(name_no_ext) == normalized_title:
+            return os.path.join(folder, existing)
+
+    return None
+
+
+# --- SHARED DOWNLOAD LOGIC (WITH PROGRESS BAR) ---
+def perform_download(url, opts, target_folder):
+    """
+    Executes the download in a separate thread.
+    """
+    st.info("⏳ Starting download logic...")
+
+    # Create UI Elements for Progress
+    progress_bar = st.progress(0)
+    status_msg = st.empty()
+
+    # Define Hooks to update the UI
+    def progress_hook(d):
+        if d['status'] == 'downloading':
+            p = d.get('_percent_str', '0%').replace('%', '')
+            try:
+                percent_val = float(p) / 100
+                speed = d.get('_speed_str', 'N/A')
+                eta = d.get('_eta_str', 'N/A')
+
+                # Update UI
+                progress_bar.progress(percent_val)
+                status_msg.info(f"⚡ Downloading: **{p}%** | Speed: **{speed}** | ETA: **{eta}**")
+            except:
+                pass
+        elif d['status'] == 'finished':
+            progress_bar.progress(1.0)
+            status_msg.success("✅ Download complete! Finalizing file...")
+
+    # Add hook to opts
+    opts['progress_hooks'] = [progress_hook]
+
+    # Run download
+    try:
+        # FORCE overwrite
+        opts['overwrites'] = True
+        opts['force_overwrites'] = True
+
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            ydl.download([url])
+
+        st.balloons()
+        st.session_state.download_done = True
+        st.session_state.download_error = None
+
+        # Reset state after successful download
+        st.session_state.last_url = ''
+        st.session_state.fetched_title = None
+        st.session_state.dup = None
+        st.session_state.download_done = False
+        time.sleep(1)  # Give user a moment to see 100%
+        st.rerun()
+
+    except Exception as e:
+        st.error(f"❌ Error: {e}")
+
+
+# --- CONFIRMATION DIALOG ---
+@st.dialog("⚠️ File Already Exists")
+def confirm_overwrite_dialog(file_path, url, opts, target_folder):
+    st.warning(f"The file **{os.path.basename(file_path)}** already exists in your library.")
+    st.write("Do you want to download it again? This will overwrite the existing file.")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("✅ Yes, Overwrite", type="primary", use_container_width=True):
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                # Close dialog implicitly by finishing
+                st.session_state['trigger_download'] = True
+                st.rerun()
+            except PermissionError:
+                st.error("❌ Cannot delete old file. It is currently in use.")
+            except Exception as e:
+                st.error(f"❌ Error: {e}")
+
+    with col2:
+        if st.button("❌ No, Cancel", type="secondary", use_container_width=True):
+            st.rerun()
 
 
 # --- HEADER WITH EXIT BUTTON ---
@@ -595,7 +694,7 @@ with header_col1:
     st.markdown('<div style="padding: 10px 0;"><span class="logo-text"> Pro Media Downloader</span></div>',
                 unsafe_allow_html=True)
 with header_col2:
-    if st.button("🔴 Shutdown App", key="top_exit", type="secondary"):
+    if st.button("🔴 Shutdown App ", key="top_exit", type="secondary"):
         st.success("Stopping server...")
         os._exit(0)
 
@@ -671,50 +770,93 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# --- Session state init ---
+if 'last_url' not in st.session_state:
+    st.session_state.last_url = ''
+if 'fetched_title' not in st.session_state:
+    st.session_state.fetched_title = None
+if 'dup' not in st.session_state:
+    st.session_state.dup = None
+if 'download_done' not in st.session_state:
+    st.session_state.download_done = False
+if 'download_error' not in st.session_state:
+    st.session_state.download_error = None
+if 'trigger_download' not in st.session_state:
+    st.session_state.trigger_download = False
+
 # --- Auto-fetch Metadata Logic ---
-if url:
+if url and (url != st.session_state.get('last_url', '') or download_type != st.session_state.get('last_type', '')):
+    st.session_state.last_url = url
+    st.session_state.last_type = download_type
+    st.session_state.fetched_title = None
+    st.session_state.dup = None
     try:
-        with yt_dlp.YoutubeDL({'format': ydl_format, 'quiet': True, 'noplaylist': True}) as ydl:
+        with yt_dlp.YoutubeDL({'quiet': True, 'noplaylist': True}) as ydl:
             info = ydl.extract_info(url, download=False)
-            st.info(f"✨ **Ready to Download:** {info.get('title')[:80]}...")
-    except Exception as e:
+            st.session_state.fetched_title = info.get('title', '')
+            st.session_state.dup = check_duplicate(st.session_state.fetched_title, download_type)
+    except:
         st.error("⚠️ Unable to fetch video details. Please check the URL.")
 
+if st.session_state.get('fetched_title'):
+    if st.session_state.get('dup'):
+        try:
+            dup_size = format_bytes(os.path.getsize(st.session_state.dup))
+        except:
+            dup_size = "Unknown"
+        # Warning shown, but we continue to show the button
+        st.warning(f"⚠️ **File Already Exists!** — `{os.path.basename(st.session_state.dup)}` ({dup_size})")
+    else:
+        st.info(f"✨ **Ready to Download:** {st.session_state.fetched_title[:80]}...")
+
+# --- PREPARE OPTS (Needed for both button & trigger) ---
+ffmpeg_loc = get_ffmpeg_path()
+target_folder = SONGS_FOLDER if download_type == "Music (MP3)" else VIDEOS_FOLDER
+
+if download_type == "Music (MP3)":
+    opts = {
+        'format': 'bestaudio/best',
+        'ffmpeg_location': ffmpeg_loc,
+        'outtmpl': f'{SONGS_FOLDER}/%(title)s.%(ext)s',
+        'noplaylist': True,
+        'postprocessors': [
+            {'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': bitrate}],
+    }
+else:
+    opts = {
+        'format': ydl_format,
+        'ffmpeg_location': ffmpeg_loc,
+        'outtmpl': f'{VIDEOS_FOLDER}/%(title)s.%(ext)s',
+        'noplaylist': True,
+        'merge_output_format': 'mp4',
+    }
+
+# --- HANDLE TRIGGERED DOWNLOAD (From Dialog) ---
+if st.session_state.get('trigger_download'):
+    st.session_state.trigger_download = False  # Reset flag
+    perform_download(url, opts, target_folder)
+
+# --- DOWNLOAD BUTTON ---
 if st.button("🚀 Start Download", use_container_width=True):
     if not url:
         st.warning("⚠️ Please enter a URL!")
     else:
-        progress_bar = st.progress(0)
-        status_msg = st.empty()
+        # Check Duplicate Logic
+        title_check = st.session_state.get('fetched_title')
+        if not title_check:
+            try:
+                with yt_dlp.YoutubeDL({'quiet': True, 'noplaylist': True}) as ydl:
+                    info = ydl.extract_info(url, download=False)
+                    title_check = info.get('title', '')
+            except:
+                pass
 
-        ffmpeg_loc = get_ffmpeg_path()
+        existing_file = check_duplicate(title_check, download_type) if title_check else None
 
-        try:
-            if download_type == "Music (MP3)":
-                opts = {
-                    'format': 'bestaudio/best',
-                    'ffmpeg_location': ffmpeg_loc,
-                    'outtmpl': f'{SONGS_FOLDER}/%(title)s.%(ext)s',
-                    'noplaylist': True,
-                    'progress_hooks': [progress_hook],
-                    'postprocessors': [
-                        {'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': bitrate}],
-                }
-            else:
-                opts = {
-                    'format': ydl_format,
-                    'ffmpeg_location': ffmpeg_loc,
-                    'outtmpl': f'{VIDEOS_FOLDER}/%(title)s.%(ext)s',
-                    'noplaylist': True,
-                    'merge_output_format': 'mp4',
-                    'progress_hooks': [progress_hook],
-                }
-            with yt_dlp.YoutubeDL(opts) as ydl:
-                ydl.download([url])
-            st.balloons()
-            st.rerun()
-        except Exception as e:
-            st.error(f"❌ Error: {e}")
+        if existing_file:
+            confirm_overwrite_dialog(existing_file, url, opts, target_folder)
+        else:
+            perform_download(url, opts, target_folder)
 
 # --- Library Section ---
 st.markdown("---")
@@ -786,33 +928,163 @@ with col_s2:
 # --- FOOTER ---
 st.markdown("---")
 
-# Using components.html for better rendering
-import streamlit.components.v1 as components
-
 footer_html = """
-<div style="text-align: center; padding: 30px 20px; margin-top: 20px; 
-            background: rgba(21, 27, 59, 0.5); backdrop-filter: blur(10px); 
-            border-radius: 16px; border: 1px solid rgba(0, 212, 255, 0.2);">
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: transparent; font-family: 'Poppins', sans-serif; overflow: hidden; }
 
-    <div style="margin-bottom: 16px;">
-        <span style="color: #8B9DC3; font-size: 13px; line-height: 1.8;">
-            ⚖️ <strong style="color: #FFFFFF;">Legal Disclaimer:</strong> This tool is intended for personal use only. Users are responsible for ensuring compliance with copyright laws and YouTube’s Terms of Service.
-            <br>
-            Downloading or distributing copyrighted material without proper authorization may be unlawful in your jurisdiction.
-        </span>
+    .footer {
+        position: relative;
+        text-align: center;
+        padding: 28px 20px;
+        border-radius: 20px;
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        background: rgba(10, 15, 40, 0.85);
+        backdrop-filter: blur(20px);
+        overflow: hidden;
+    }
+
+    .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        pointer-events: none;
+        animation: float 6s ease-in-out infinite;
+    }
+    .orb1 { width:200px; height:200px; background:rgba(0,212,255,0.15); top:-80px; left:-60px; animation-delay:0s; }
+    .orb2 { width:180px; height:180px; background:rgba(181,55,242,0.15); top:-60px; right:-50px; animation-delay:2s; }
+    .orb3 { width:150px; height:150px; background:rgba(0,255,136,0.1); bottom:-60px; left:40%; animation-delay:4s; }
+
+    @keyframes float {
+        0%,100% { transform: translateY(0px) scale(1); }
+        50%       { transform: translateY(-15px) scale(1.05); }
+    }
+
+    .glow-line {
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 2px;
+        background: linear-gradient(90deg, transparent, #00D4FF, #B537F2, #00FF88, #00D4FF, transparent);
+        background-size: 200% 100%;
+        animation: shimmer 3s linear infinite;
+    }
+
+    @keyframes shimmer {
+        0%   { background-position: -200% 0; }
+        100% { background-position:  200% 0; }
+    }
+
+    .tech-badges {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+    }
+
+    .badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        animation: badgepulse 2s ease-in-out infinite;
+    }
+
+    .badge-py { background:rgba(55,120,200,0.2); color:#5ba3f5; border:1px solid rgba(55,120,200,0.4); animation-delay:0s; }
+    .badge-st { background:rgba(255,75,75,0.2);  color:#ff6b6b; border:1px solid rgba(255,75,75,0.4);  animation-delay:0.3s; }
+    .badge-yt { background:rgba(255,0,0,0.15);   color:#ff4444; border:1px solid rgba(255,0,0,0.3);    animation-delay:0.6s; }
+    .badge-ff { background:rgba(0,212,255,0.15); color:#00D4FF; border:1px solid rgba(0,212,255,0.3);  animation-delay:0.9s; }
+    .badge-ig { background:rgba(181,55,242,0.2); color:#B537F2; border:1px solid rgba(181,55,242,0.4); animation-delay:1.2s; }
+
+    @keyframes badgepulse {
+        0%,100% { transform:translateY(0); box-shadow:none; }
+        50%       { transform:translateY(-2px); box-shadow:0 4px 15px rgba(0,212,255,0.3); }
+    }
+
+    .footer-title {
+        font-size: 15px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #00D4FF, #B537F2, #00FF88);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+    }
+
+    .legal {
+        font-size: 11px;
+        color: #5a6a8a;
+        line-height: 1.7;
+        margin-bottom: 14px;
+        padding: 10px 16px;
+        background: rgba(255,255,255,0.03);
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    .legal strong { color: #8899bb; }
+
+    .divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(0,212,255,0.3), transparent);
+        margin: 12px 0;
+    }
+
+    .copyright { font-size: 11px; color: #3a4a6a; letter-spacing: 0.3px; }
+    .copyright span { color: #00D4FF; font-weight: 600; }
+
+    .heart {
+        display: inline-block;
+        animation: heartbeat 1.2s ease-in-out infinite;
+        color: #ff4466 !important;
+        -webkit-text-fill-color: #ff4466 !important;
+        font-size: 16px;
+        filter: drop-shadow(0 0 6px rgba(255, 68, 102, 0.8));
+    }
+    @keyframes heartbeat {
+        0%,100% { transform:scale(1); }
+        14%       { transform:scale(1.3); }
+        28%       { transform:scale(1); }
+        42%       { transform:scale(1.3); }
+        70%       { transform:scale(1); }
+    }
+</style>
+</head>
+<body>
+<div class="footer">
+    <div class="glow-line"></div>
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+
+    <div class="tech-badges">
+        <span class="badge badge-py">🐍 Python</span>
+        <span class="badge badge-st">⚡ Streamlit</span>
+        <span class="badge badge-yt">📥 yt-dlp</span>
+        <span class="badge badge-ff">🎬 FFmpeg</span>
     </div>
 
-    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(0, 212, 255, 0.2);">
-        <span style="color: #00D4FF; font-size: 14px; font-weight: 600;">
-            Built with ❤️ using Python, Streamlit, yt‑dlp, FFmpeg & ffprobe
-        </span>
-        <br>
-        <span style="color: #8B9DC3; font-size: 12px; margin-top: 8px; display: inline-block;">
-            © 2026 Pro Media Downloader • Developed by Krishna Malgi
-        </span>
+    <div class="footer-title">
+        Built with <span class="heart">❤️</span> by Krishna Malgi
     </div>
 
+    <div class="legal">
+        ⚖️ <strong>Legal Disclaimer:</strong> This tool is intended for personal use only.
+        Users are responsible for compliance with copyright laws & platform Terms of Service.
+        Downloading copyrighted content without authorization may be unlawful in your jurisdiction.
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="copyright">
+        © 2026 <span>Pro Media Downloader</span> • All rights reserved • Developed by <span>Krishna Malgi</span>
+    </div>
 </div>
+</body>
+</html>
 """
 
-components.html(footer_html, height=210)
+components.html(footer_html, height=300)
