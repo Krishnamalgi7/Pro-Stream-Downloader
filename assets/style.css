@@ -1,0 +1,476 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* ===========================
+   GLOBAL STYLES
+   =========================== */
+* {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    transition: background-color 0s !important; /* Prevents white flash */
+}
+
+/* Hide Streamlit Branding */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+
+/* Main App Background */
+.stApp {
+    background: linear-gradient(135deg, #0F1535 0%, #1A2347 100%);
+    color: #FFFFFF;
+}
+
+/* ===========================
+   HEADER & LOGO
+   =========================== */
+.logo-text {
+    font-size: 32px;
+    font-weight: 700;
+    color: #FFFFFF !important;
+    text-shadow: 0 0 30px rgba(0, 212, 255, 0.6), 0 0 10px rgba(0, 212, 255, 0.8);
+}
+
+.logo-text::before {
+    content: "🚀 ";
+}
+
+/* ===========================
+   INPUT FIELDS & DROPDOWNS
+   =========================== */
+/* Input Field Styling */
+.stTextInput > div > div > input {
+    background: rgba(30, 39, 73, 0.6) !important;
+    border: 2px solid transparent !important;
+    border-radius: 12px !important;
+    padding: 20px 24px !important;
+    font-size: 16px !important;
+    color: #FFFFFF !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.stTextInput > div > div > input:focus {
+    border-color: #00D4FF !important;
+    box-shadow:
+        inset 0 2px 8px rgba(0, 0, 0, 0.3),
+        0 0 0 4px rgba(0, 212, 255, 0.2),
+        0 0 20px rgba(0, 212, 255, 0.4) !important;
+    outline: none !important;
+}
+
+.stTextInput > div > div > input::placeholder {
+    color: #4A5578 !important;
+}
+
+/* Select Box Main Container */
+.stSelectbox > div > div {
+    background: rgba(30, 39, 73, 0.9) !important;
+    border: 1px solid rgba(0, 212, 255, 0.4) !important;
+    border-radius: 10px !important;
+    color: #FFFFFF !important;
+    transition: all 0.3s ease !important;
+}
+
+.stSelectbox > div > div:hover {
+    border-color: rgba(0, 212, 255, 0.7) !important;
+    background: rgba(30, 39, 73, 1) !important;
+}
+
+/* Selected value text */
+.stSelectbox [data-baseweb="select"] span {
+    color: #FFFFFF !important;
+    font-weight: 500 !important;
+}
+
+.stSelectbox [data-baseweb="select"] div {
+    color: #FFFFFF !important;
+}
+
+/* ===========================
+   POPUP MENUS (The Tricky Part)
+   =========================== */
+/* Dropdown options menu container */
+[data-baseweb="popover"] {
+    z-index: 999999 !important;
+    background: transparent !important;
+}
+
+[data-baseweb="popover"] [data-baseweb="menu"] {
+    background-color: #1A2347 !important;
+    border: 1px solid rgba(0, 212, 255, 0.3) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8) !important;
+}
+
+[data-baseweb="menu"] ul {
+    background-color: #1A2347 !important;
+    padding: 8px !important;
+}
+
+/* Individual Options */
+[data-baseweb="menu"] li {
+    background-color: transparent !important;
+    color: #FFFFFF !important;
+    padding: 14px 18px !important;
+    margin: 3px 0 !important;
+    border-radius: 10px !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    border: 1px solid transparent !important;
+}
+
+[data-baseweb="menu"] li:hover {
+    background-color: rgba(30, 39, 73, 0.8) !important;
+    color: #FFFFFF !important;
+    border-color: rgba(0, 212, 255, 0.5) !important;
+}
+
+[data-baseweb="menu"] li[aria-selected="true"] {
+    background-color: rgba(0, 212, 255, 0.25) !important;
+    color: #00D4FF !important;
+    font-weight: 600 !important;
+    border-color: rgba(0, 212, 255, 0.6) !important;
+}
+
+/* Force text inside options to be white */
+[data-baseweb="menu"] li *,
+[role="option"] span,
+[role="option"] div {
+    color: inherit !important;
+}
+
+/* Force dropdown to open DOWNWARD */
+.stSelectbox [data-baseweb="popover"] {
+    position: absolute !important;
+    top: 100% !important;
+    bottom: auto !important;
+    transform: none !important;
+}
+
+/* ===========================
+   BUTTONS
+   =========================== */
+.stButton > button {
+    background: linear-gradient(135deg, #00D4FF 0%, #B537F2 100%) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 16px 32px !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #FFFFFF !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3) !important;
+    width: 100%;
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 30px rgba(0, 212, 255, 0.5) !important;
+    cursor: pointer;
+}
+
+.stButton > button:active {
+    transform: translateY(0) !important;
+}
+
+/* Secondary Button (Exit/Cancel) */
+.stButton > button[kind="secondary"] {
+    background: rgba(255, 46, 99, 0.15) !important;
+    border: 1px solid rgba(255, 46, 99, 0.5) !important;
+    color: #FF4D7D !important;
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+    box-shadow: 0 4px 15px rgba(255, 46, 99, 0.2) !important;
+    width: auto !important;
+}
+
+.stButton > button[kind="secondary"]:hover {
+    background: rgba(255, 46, 99, 0.25) !important;
+    border-color: #FF2E63 !important;
+    box-shadow: 0 6px 20px rgba(255, 46, 99, 0.4) !important;
+}
+
+/* ===========================
+   EXPANDERS & DETAILS
+   =========================== */
+.streamlit-expanderHeader {
+    background: rgba(30, 39, 73, 0.8) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(0, 212, 255, 0.3) !important;
+    border-radius: 12px !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    font-size: 16px !important;
+    transition: all 0.3s ease !important;
+}
+
+.streamlit-expanderHeader:hover {
+    border-color: rgba(0, 212, 255, 0.6) !important;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3) !important;
+    background: rgba(30, 39, 73, 0.95) !important;
+}
+
+.streamlit-expanderContent {
+    background: rgba(21, 27, 59, 0.95) !important;
+    border: 1px solid rgba(42, 52, 87, 0.8) !important;
+    border-radius: 0 0 12px 12px !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.streamlit-expanderHeader p,
+.streamlit-expanderHeader span,
+.streamlit-expanderContent p,
+.streamlit-expanderContent span,
+.streamlit-expanderContent div {
+    color: #FFFFFF !important;
+}
+
+/* Fix the white overlay issue */
+[data-testid="stExpander"] {
+    background: transparent !important;
+}
+
+div[data-testid="stExpander"] div[data-testid="stExpanderDetails"] {
+    background: rgba(21, 27, 59, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+/* ===========================
+   TABS
+   =========================== */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 16px;
+    background: transparent;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background: rgba(30, 39, 73, 0.7);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 10px;
+    padding: 12px 24px;
+    color: #C8D6FF;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.3s ease;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    background: rgba(30, 39, 73, 0.9);
+    border-color: rgba(0, 212, 255, 0.6);
+    color: #00D4FF;
+}
+
+.stTabs [aria-selected="true"] {
+    background: rgba(0, 212, 255, 0.25) !important;
+    border-color: #00D4FF !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+/* ===========================
+   MISC ELEMENTS
+   =========================== */
+/* Progress Bar */
+.stProgress > div > div > div {
+    background: linear-gradient(90deg, #00D4FF, #B537F2, #00FF88) !important;
+    border-radius: 999px !important;
+}
+
+/* Dialogs & Toasts */
+div[role="dialog"],
+div[data-testid="stToast"] {
+    background: #1A2347 !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(0, 212, 255, 0.3) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+div[data-testid="stToast"] p,
+div[data-testid="stToast"] div {
+    color: #FFFFFF !important;
+}
+
+/* Alerts/Info Boxes */
+.stAlert {
+    background: rgba(30, 39, 73, 0.6) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(0, 212, 255, 0.3) !important;
+    border-radius: 12px !important;
+    color: #FFFFFF !important;
+}
+
+/* Tables */
+.stTable {
+    background: rgba(30, 39, 73, 0.5) !important;
+    border-radius: 12px !important;
+}
+
+.stTable thead tr th {
+    background: rgba(0, 212, 255, 0.2) !important;
+    color: #00D4FF !important;
+    font-weight: 600 !important;
+    border: none !important;
+}
+
+.stTable tbody tr td {
+    color: #FFFFFF !important;
+    border: 1px solid rgba(42, 52, 87, 0.5) !important;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6, label, p, span, div {
+    color: #FFFFFF !important;
+}
+
+h1 {
+    font-size: 48px !important;
+    margin-bottom: 24px !important;
+    text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+}
+
+hr {
+    border-color: rgba(42, 52, 87, 0.5) !important;
+    margin: 32px 0 !important;
+}
+
+/* Containers */
+[data-testid="stVerticalBlock"] > [data-testid="stVerticalBlock"] {
+    background: rgba(30, 39, 73, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 16px;
+    padding: 24px;
+}
+
+/* Media Players */
+audio, video {
+    border-radius: 12px !important;
+    width: 100% !important;
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-right: 8px;
+}
+
+.badge-mp3 {
+    background: rgba(0, 212, 255, 0.2);
+    color: #00D4FF;
+    border: 1px solid rgba(0, 212, 255, 0.4);
+}
+
+.badge-mp4 {
+    background: rgba(181, 55, 242, 0.2);
+    color: #B537F2;
+    border: 1px solid rgba(181, 55, 242, 0.4);
+}
+
+.badge-size {
+    background: rgba(0, 255, 136, 0.2);
+    color: #00FF88;
+    border: 1px solid rgba(0, 255, 136, 0.4);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(30, 39, 73, 0.5);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #00D4FF, #B537F2);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #00E5FF, #C547FF);
+}
+
+/* NUCLEAR OPTION (Force dark dropdowns everywhere) */
+div[class*="menu"],
+div[class*="Menu"],
+div[class*="option"],
+div[class*="Option"],
+div[class*="list"],
+div[class*="List"],
+ul[class*="menu"],
+ul[class*="Menu"] {
+    background: #0F1535 !important;
+    color: #E8EEFF !important;
+}
+
+li[class*="option"],
+li[class*="Option"] {
+    background: transparent !important;
+    color: #E8EEFF !important;
+}
+
+li[class*="option"]:hover,
+li[class*="Option"]:hover {
+    background: rgba(30, 39, 73, 0.7) !important;
+    color: #FFFFFF !important;
+}
+
+/* ===========================
+   ANIMATIONS (Missed Section)
+   =========================== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-in {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* ===========================
+   FIX: EXPANDER (THE NUCLEAR OPTION)
+   =========================== */
+
+/* 1. Force Background DARK in ALL states (Normal, Hover, Open, Focus, Active) */
+div[data-testid="stExpander"] details > summary,
+div[data-testid="stExpander"] details > summary:hover,
+div[data-testid="stExpander"] details > summary:focus,
+div[data-testid="stExpander"] details[open] > summary,
+div[data-testid="stExpander"] details[open] > summary:hover,
+div[data-testid="stExpander"] details[open] > summary:focus {
+    background-color: rgba(30, 39, 73, 0.95) !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(0, 212, 255, 0.3) !important;
+    transition: none !important; /* Stop the white flash animation */
+}
+
+/* 2. Force the Arrow Icon to be WHITE */
+div[data-testid="stExpander"] details > summary svg {
+    fill: #FFFFFF !important;
+    color: #FFFFFF !important;
+}
+
+/* 3. Force the Content Inside to match */
+div[data-testid="stExpander"] details > div {
+    background-color: rgba(21, 27, 59, 0.95) !important;
+    color: #FFFFFF !important;
+}
+
+/* 4. Remove the default blue outline Streamlit adds on click */
+div[data-testid="stExpander"] details > summary:focus-visible {
+    outline: 2px solid #00D4FF !important;
+    outline-offset: -2px;
+}

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: transparent; font-family: 'Poppins', sans-serif; overflow: hidden; }
+
+    .footer {
+        position: relative;
+        text-align: center;
+        padding: 28px 20px;
+        border-radius: 20px;
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        background: rgba(10, 15, 40, 0.85);
+        backdrop-filter: blur(20px);
+        overflow: hidden;
+    }
+
+    .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        pointer-events: none;
+        animation: float 6s ease-in-out infinite;
+    }
+    .orb1 { width:200px; height:200px; background:rgba(0,212,255,0.15); top:-80px; left:-60px; animation-delay:0s; }
+    .orb2 { width:180px; height:180px; background:rgba(181,55,242,0.15); top:-60px; right:-50px; animation-delay:2s; }
+    .orb3 { width:150px; height:150px; background:rgba(0,255,136,0.1); bottom:-60px; left:40%; animation-delay:4s; }
+
+    @keyframes float {
+        0%,100% { transform: translateY(0px) scale(1); }
+        50%       { transform: translateY(-15px) scale(1.05); }
+    }
+
+    .glow-line {
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 2px;
+        background: linear-gradient(90deg, transparent, #00D4FF, #B537F2, #00FF88, #00D4FF, transparent);
+        background-size: 200% 100%;
+        animation: shimmer 3s linear infinite;
+    }
+
+    @keyframes shimmer {
+        0%   { background-position: -200% 0; }
+        100% { background-position:  200% 0; }
+    }
+
+    .tech-badges {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+    }
+
+    .badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        animation: badgepulse 2s ease-in-out infinite;
+    }
+
+    .badge-py { background:rgba(55,120,200,0.2); color:#5ba3f5; border:1px solid rgba(55,120,200,0.4); animation-delay:0s; }
+    .badge-st { background:rgba(255,75,75,0.2);  color:#ff6b6b; border:1px solid rgba(255,75,75,0.4);  animation-delay:0.3s; }
+    .badge-yt { background:rgba(255,0,0,0.15);   color:#ff4444; border:1px solid rgba(255,0,0,0.3);    animation-delay:0.6s; }
+    .badge-ff { background:rgba(0,212,255,0.15); color:#00D4FF; border:1px solid rgba(0,212,255,0.3);  animation-delay:0.9s; }
+    .badge-ig { background:rgba(181,55,242,0.2); color:#B537F2; border:1px solid rgba(181,55,242,0.4); animation-delay:1.2s; }
+
+    @keyframes badgepulse {
+        0%,100% { transform:translateY(0); box-shadow:none; }
+        50%       { transform:translateY(-2px); box-shadow:0 4px 15px rgba(0,212,255,0.3); }
+    }
+
+    .footer-title {
+        font-size: 15px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #00D4FF, #B537F2, #00FF88);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+    }
+
+    .legal {
+        font-size: 11px;
+        color: #5a6a8a;
+        line-height: 1.7;
+        margin-bottom: 14px;
+        padding: 10px 16px;
+        background: rgba(255,255,255,0.03);
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    .legal strong { color: #8899bb; }
+
+    .divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(0,212,255,0.3), transparent);
+        margin: 12px 0;
+    }
+
+    .copyright { font-size: 11px; color: #3a4a6a; letter-spacing: 0.3px; }
+    .copyright span { color: #00D4FF; font-weight: 600; }
+
+    .heart {
+        display: inline-block;
+        animation: heartbeat 1.2s ease-in-out infinite;
+        color: #ff4466 !important;
+        -webkit-text-fill-color: #ff4466 !important;
+        font-size: 16px;
+        filter: drop-shadow(0 0 6px rgba(255, 68, 102, 0.8));
+    }
+    @keyframes heartbeat {
+        0%,100% { transform:scale(1); }
+        14%       { transform:scale(1.3); }
+        28%       { transform:scale(1); }
+        42%       { transform:scale(1.3); }
+        70%       { transform:scale(1); }
+    }
+</style>
+</head>
+<body>
+<div class="footer">
+    <div class="glow-line"></div>
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+
+    <div class="tech-badges">
+        <span class="badge badge-py">🐍 Python</span>
+        <span class="badge badge-st">⚡ Streamlit</span>
+        <span class="badge badge-yt">📥 yt-dlp</span>
+        <span class="badge badge-ff">🎬 FFmpeg</span>
+    </div>
+
+    <div class="footer-title">
+        Built with <span class="heart">❤️</span> by Krishna Malgi
+    </div>
+
+    <div class="legal">
+        ⚖️ <strong>Legal Disclaimer:</strong> This tool is intended for personal use only.
+        Users are responsible for compliance with copyright laws & platform Terms of Service.
+        Downloading copyrighted content without authorization may be unlawful in your jurisdiction.
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="copyright">
+        © 2026 <span>Pro Media Downloader</span> • All rights reserved • Developed by <span>Krishna Malgi</span>
+    </div>
+</div>
+</body>
+</html>

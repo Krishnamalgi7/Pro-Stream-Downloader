@@ -1,4 +1,21 @@
+# PyCharm / JetBrains files
+.idea/
+
+# Environments
 .venv/
+
+# PyInstaller / Build outputs (The ones that caused the warnings)
+dist/
+build/
+*.spec
+
+# Downloads (Keep your hard drive space and repo size low)
 data/
-__pycache__/
+
+# Binaries
+ffmpeg.exe
+ffprobe.exe
 *.exe
+
+# Python bytecode
+__pycache__/
